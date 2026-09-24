@@ -1,3 +1,4 @@
+import { agentInstallerUrl } from "@/config/distribution";
 import * as React from "react";
 import { z } from "zod";
 import { schema } from "@/components/admin/NodeTable/schema/node";
@@ -87,13 +88,13 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     switch (selectedPlatform) {
       case "linux":
         finalCommand =
-          `wget -qO- https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.sh | sudo bash -s -- ` +
+          `wget -qO- ${agentInstallerUrl("install.sh")} | sudo bash -s -- ` +
           quoteShellArgs(args);
         break;
       case "windows":
         finalCommand =
           `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ` +
-          `"iwr 'https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.ps1'` +
+          `"iwr '${agentInstallerUrl("install.ps1")}'` +
           ` -UseBasicParsing -OutFile 'install.ps1'; &` +
           ` '.\\install.ps1'`;
         args.forEach((arg) => {
@@ -103,7 +104,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
         break;
       case "macos":
         finalCommand =
-          `zsh <(curl -sL https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.sh) ` +
+          `bash <(curl -fsSL ${agentInstallerUrl("install.sh")}) ` +
           quoteShellArgs(args);
         break;
     }

@@ -2,9 +2,9 @@
   "name": "Komari",
   "short": "default",
   "description": "Komari default theme",
-  "version": "1.0.0",
+  "version": "1.2.3-fork.1",
   "author": "Akizon77",
-  "url": "https://github.com/komari-monitor/komari-web",
+  "url": "https://github.com/berry-shake/komari-web",
   "preview": "dist/assets/edit_117847723_p0.png",
   "configuration": {
     "type": "managed",

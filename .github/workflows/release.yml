@@ -1,0 +1,59 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing immutable fork tag (1.2.3-fork.N)'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release
+  cancel-in-progress: false
+env:
+  TAG: ${{ inputs.tag }}
+jobs:
+  prepare:
+    if: github.repository == 'berry-shake/komari-web'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.prepare.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: mod-single-db
+          fetch-depth: 0
+      - id: prepare
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/release.py prepare "$TAG" 1.2.3 berry-shake/komari-web
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Test and package theme
+        env:
+          VERSION: ${{ inputs.tag }}
+        run: bash build-theme.sh
+      - run: python3 scripts/release.py checksums build
+      - name: Verify tag still identifies the built commit
+        run: |
+          git fetch --depth=1 origin "refs/tags/$TAG"
+          test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "$(git rev-parse HEAD)"
+      - name: Publish complete theme release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$TAG" build/* --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$TAG" --generate-notes
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease=false --latest

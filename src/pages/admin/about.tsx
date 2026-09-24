@@ -1,3 +1,4 @@
+import { SERVER_README_URL, SERVER_README_PAGE } from "@/config/distribution";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -15,7 +16,7 @@ export default function AboutPage() {
   const [view, setView] = useState("open_source");
   useEffect(() => {
     fetch(
-      "https://raw.githubusercontent.com/komari-monitor/komari/refs/heads/main/README.md"
+      SERVER_README_URL
     )
       .then((res) => res.text())
       .then(setMarkdown);
@@ -192,7 +193,7 @@ export default function AboutPage() {
                   )}
                 </div>
                 <a
-                  href="https://github.com/komari-monitor/komari/blob/main/README.md"
+                  href={SERVER_README_PAGE}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-row gap-2 text-sm items-center"
