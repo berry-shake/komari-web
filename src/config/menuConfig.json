@@ -85,6 +85,11 @@
       "icon": "Activity"
     },
     {
+      "labelKey": "ddns.title",
+      "path": "/admin/ddns",
+      "icon": "Globe"
+    },
+    {
       "labelKey": "sessions.title",
       "path": "/admin/sessions",
       "icon": "Users"

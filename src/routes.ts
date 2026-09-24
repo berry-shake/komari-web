@@ -135,6 +135,10 @@ export const routes: RouteObject[] = [
         ],
       },
       {
+        path: "ddns",
+        element: React.createElement(lazy(() => import("./pages/admin/ddns"))),
+      },
+      {
         path: "ping",
         element: React.createElement(
           lazy(() => import("./pages/admin/pingTask"))
