@@ -1,5 +1,7 @@
 # Komari Web UI
 
+> 本仓库由 **berry-shake** 基于固定上游版本维护，默认分支为 `mod`。构建、安装、版本更新和手动发布请先阅读 [FORK.md](./FORK.md)。下方保留上游介绍与署名。
+
 参与翻译Komari？
 - 直接提PR
 

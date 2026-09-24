@@ -1,3 +1,4 @@
+import { AGENT_IMAGE, agentInstallerUrl } from "@/config/distribution";
 import {
   quotePowerShellArg,
   quoteShellArg,
@@ -317,7 +318,7 @@ const AutoDiscoverySection = ({
     if (selectedPlatform === "windows") {
       scriptFile = "install.ps1";
     }
-    let scriptUrl = `https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/${scriptFile}`;
+    let scriptUrl = agentInstallerUrl(scriptFile);
     if (enableGhproxy && ghproxy) {
       scriptUrl = scriptUrl.slice(8); // 去掉 https://
       if (ghproxy.endsWith("/")) {
@@ -350,7 +351,7 @@ const AutoDiscoverySection = ({
         break;
       case "macos":
         finalCommand =
-          `zsh <(curl -sL ${quoteShellArg(scriptUrl)}) ` +
+          `bash <(curl -fsSL ${quoteShellArg(scriptUrl)}) ` +
           quoteShellArgs(args);
         break;
       case "docker": {
@@ -375,7 +376,7 @@ const AutoDiscoverySection = ({
           `touch .komari-auto-discovery.json && ` +
           `docker run -d --name komari-agent --restart=always ` +
           `-v .komari-auto-discovery.json:/app/auto-discovery.json ` +
-          `ghcr.io/komari-monitor/komari-agent:latest ` +
+          `${AGENT_IMAGE} ` +
           quoteShellArgs(dockerArgs);
         break;
       }
@@ -1525,7 +1526,7 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
       scriptFile = "install.ps1";
     }
     let scriptUrl =
-      `https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/${scriptFile}`;
+      agentInstallerUrl(scriptFile);
     if (enableGhproxy) {
       if (enableGhproxy && ghproxy) {
         scriptUrl = scriptUrl.slice(8); // 去掉 https://
@@ -1559,7 +1560,7 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
         break;
       case "macos":
         finalCommand =
-          `zsh <(curl -sL ${quoteShellArg(scriptUrl)}) ` + quoteShellArgs(args);
+          `bash <(curl -fsSL ${quoteShellArg(scriptUrl)}) ` + quoteShellArgs(args);
         break;
       case "docker": {
         // Docker 运行时不支持安装脚本专用参数，剔除它们及其取值
@@ -1578,7 +1579,7 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
         }
         finalCommand =
           `docker run -d --name komari-agent --restart=always ` +
-          `ghcr.io/komari-monitor/komari-agent:latest ` +
+          `${AGENT_IMAGE} ` +
           quoteShellArgs(dockerArgs);
         break;
       }

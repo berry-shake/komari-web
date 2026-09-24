@@ -1,3 +1,4 @@
+import { SERVER_URL } from "@/config/distribution";
 import ThemeSwitch from "./ThemeSwitch";
 import ColorSwitch from "./ColorSwitch";
 import LanguageSwitch from "./Language";
@@ -37,7 +38,7 @@ const NavBar = () => {
         <IconButton
           variant="soft"
           onClick={() => {
-            window.open("https://github.com/komari-monitor", "_blank");
+            window.open(SERVER_URL, "_blank");
           }}
         >
           <GitHubLogoIcon />
