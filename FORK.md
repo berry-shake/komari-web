@@ -39,7 +39,7 @@ Release 草稿并公开为正式 Release。服务端/Agent 同时构建 Linux am
 后续只递增 `fork.N`。**GitHub 的 pre-release 选项必须为 false**，工作流会自动设置。
 不要在 fork 中给原版标签创建 Release：Agent 使用 SemVer，原版 `1.2.60` 会被认为
 高于 `1.2.60-fork.N`。首次从官方版迁移时使用我们的安装脚本重新安装一次；之后
-开启 `--auto-update` 的裸机 Agent 才会继续从自己的 fork 更新。容器 Agent 不进行
+未设置 `--disable-auto-update` 的裸机 Agent 会继续从自己的 fork 更新。容器 Agent 不进行
 二进制自更新，通过替换自有镜像更新。`dev` 构建不自动更新。
 
 首次发布镜像后，确认 Packages 的可见性为 Public 并验证匿名拉取，之后再部署。
