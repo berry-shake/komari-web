@@ -902,5 +902,25 @@
     "next_page": "Next",
     "last_page": "Last",
     "logs_load_failed": "Could not load logs. Please refresh to retry."
+  },
+  "security": {
+    "processing": "Processing…",
+    "otp_required": "Enter the current authenticator code to continue.",
+    "confirm_action": "Confirm that you want to perform this sensitive action.",
+    "replace_2fa": "Replace authenticator",
+    "replace_2fa_hint": "Verify your current authenticator, then scan the new QR code. The current authenticator stays active until you confirm the new code.",
+    "current_otp": "Current authenticator code",
+    "new_otp": "Code from the new authenticator",
+    "enrollment_expiry": "Complete setup within 5 minutes. After 5 incorrect codes, generate a new QR code.",
+    "restart_enrollment": "Start again",
+    "generate_qr": "Generate QR code",
+    "api_key_hint": "The saved key is hidden. Viewing, saving, replacing or clearing it requires your authenticator code when 2FA is enabled.",
+    "key_configured": "Key configured",
+    "key_empty": "No key configured",
+    "new_api_key": "Enter or generate a new key; leaving this empty keeps the saved key",
+    "reveal_key": "View saved key",
+    "clear_key": "Clear saved key",
+    "save_key": "Save or replace API key",
+    "key_visible_hint": "The key is shown temporarily and will be hidden automatically after 60 seconds."
   }
 }

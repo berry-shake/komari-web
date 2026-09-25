@@ -902,5 +902,25 @@
     "next_page": "下一页",
     "last_page": "末页",
     "logs_load_failed": "日志加载失败，请刷新重试。"
+  },
+  "security": {
+    "processing": "处理中…",
+    "otp_required": "请输入当前验证器的验证码以继续。",
+    "confirm_action": "请确认执行此敏感操作。",
+    "replace_2fa": "更换验证器",
+    "replace_2fa_hint": "先验证当前验证器，再扫描新二维码。确认新验证码前，原验证器仍然有效。",
+    "current_otp": "当前验证器的验证码",
+    "new_otp": "新验证器的验证码",
+    "enrollment_expiry": "请在 5 分钟内完成配置。验证码错误 5 次后，需要重新生成二维码。",
+    "restart_enrollment": "重新开始",
+    "generate_qr": "生成二维码",
+    "api_key_hint": "已保存的密钥默认隐藏。启用 2FA 后，查看、保存、更换或清除密钥都需要验证当前验证码。",
+    "key_configured": "已配置密钥",
+    "key_empty": "未配置密钥",
+    "new_api_key": "输入或生成新密钥；留空保留已保存的密钥",
+    "reveal_key": "查看已保存的密钥",
+    "clear_key": "清除已保存的密钥",
+    "save_key": "保存或更换 API Key",
+    "key_visible_hint": "密钥仅临时显示，60 秒后会自动隐藏。"
   }
 }

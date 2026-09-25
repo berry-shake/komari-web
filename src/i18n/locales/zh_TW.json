@@ -902,5 +902,25 @@
     "next_page": "下一頁",
     "last_page": "末頁",
     "logs_load_failed": "日誌載入失敗，請重新整理。"
+  },
+  "security": {
+    "processing": "處理中…",
+    "otp_required": "請輸入目前驗證器的驗證碼以繼續。",
+    "confirm_action": "請確認執行此敏感操作。",
+    "replace_2fa": "更換驗證器",
+    "replace_2fa_hint": "先驗證目前驗證器，再掃描新 QR 碼。確認新驗證碼前，原驗證器仍然有效。",
+    "current_otp": "目前驗證器的驗證碼",
+    "new_otp": "新驗證器的驗證碼",
+    "enrollment_expiry": "請在 5 分鐘內完成設定。驗證碼錯誤 5 次後，需要重新產生 QR 碼。",
+    "restart_enrollment": "重新開始",
+    "generate_qr": "產生 QR 碼",
+    "api_key_hint": "已儲存的金鑰預設隱藏。啟用 2FA 後，查看、儲存、更換或清除金鑰都需要驗證目前驗證碼。",
+    "key_configured": "已設定金鑰",
+    "key_empty": "未設定金鑰",
+    "new_api_key": "輸入或產生新金鑰；留空保留已儲存的金鑰",
+    "reveal_key": "查看已儲存的金鑰",
+    "clear_key": "清除已儲存的金鑰",
+    "save_key": "儲存或更換 API Key",
+    "key_visible_hint": "金鑰僅暫時顯示，60 秒後會自動隱藏。"
   }
 }

@@ -15,11 +15,15 @@ import Loading from "@/components/loading";
 import { DownloadIcon } from "lucide-react";
 import { useState } from "react";
 import UploadDialog from "@/components/UploadDialog";
+import SensitiveActionDialog from "@/components/admin/SensitiveActionDialog";
+import { downloadBackup, SensitiveActionError } from "@/lib/sensitiveAction";
 
 export default function SiteSettings() {
   const { t } = useTranslation();
   const { settings, loading, error, refetch } = useSettings();
   const [shareHours, setShareHours] = useState(1);
+  const [backupOpen, setBackupOpen] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<File | null>(null);
 
   // 恢复备份对话框与上传状态
   const [restoreOpen, setRestoreOpen] = useState(false);
@@ -27,7 +31,7 @@ export default function SiteSettings() {
   const [restoreProgress, setRestoreProgress] = useState(0);
   const [restoreXhr, setRestoreXhr] = useState<XMLHttpRequest | null>(null);
 
-  const uploadBackup = async (file: File) => {
+  const uploadBackup = async (file: File, code: string) => {
     if (!file.name.endsWith(".zip")) {
       toast.error(t("theme.invalid_file_type", "仅支持 .zip 文件"));
       return;
@@ -72,7 +76,7 @@ export default function SiteSettings() {
               (data && data.message) ||
               t("settings.site.backup_restore_error", "恢复备份失败");
             toast.error(msg);
-            reject(new Error(msg));
+            reject(new SensitiveActionError(msg, xhr.status));
           }
         } catch (err) {
           toast.error(t("settings.site.backup_restore_error", "恢复备份失败"));
@@ -102,6 +106,7 @@ export default function SiteSettings() {
       });
 
       xhr.open("POST", "/api/admin/upload/backup");
+      if (code) xhr.setRequestHeader("X-2FA-Code", code);
       xhr.send(formData);
     });
   };
@@ -436,9 +441,7 @@ export default function SiteSettings() {
       <SettingCardIconButton
         title={t("settings.site.backup_download")}
         description={t("settings.site.backup_download_description")}
-        onClick={() => {
-          window.open("/api/admin/download/backup", "_blank");
-        }}
+        onClick={() => setBackupOpen(true)}
       >
         <DownloadIcon size={16} />
       </SettingCardIconButton>
@@ -450,6 +453,16 @@ export default function SiteSettings() {
         {t("common.select")}
       </SettingCardButton>
 
+      {backupOpen && <SensitiveActionDialog
+        title={t("settings.site.backup_download")}
+        onClose={() => setBackupOpen(false)}
+        onConfirm={downloadBackup}
+      />}
+      {pendingRestore && <SensitiveActionDialog
+        title={t("settings.site.backup_restore")}
+        onClose={() => setPendingRestore(null)}
+        onConfirm={(code) => uploadBackup(pendingRestore, code)}
+      />}
       {/* 上传备份对话框 */}
       <UploadDialog
         open={restoreOpen}
@@ -464,7 +477,7 @@ export default function SiteSettings() {
         progress={restoreProgress}
         cancelUploadLabel={t("common.cancel")}
         onCancelUpload={cancelRestore}
-        onFileSelected={(file) => uploadBackup(file)}
+        onFileSelected={async (file) => { setPendingRestore(file); }}
         closeLabel={t("common.cancel")}
       />
     </>

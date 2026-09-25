@@ -1,5 +1,6 @@
 import React from "react";
 import { toast } from "sonner";
+import { sensitiveRequest } from "./sensitiveAction";
 
 /**
  * API utility functions for settings management
@@ -62,31 +63,18 @@ export async function getSettings(): Promise<SettingsResponse> {
  * @returns Promise containing the response
  */
 export async function updateSettings(
-  settings: Partial<SettingsResponse>
+  settings: Partial<SettingsResponse>,
+  twoFactorCode = "",
 ): Promise<void> {
-  const response = await fetch("/api/admin/settings", {
+  // This is response metadata, never a writable setting.
+  const { api_key_configured: _configured, ...writableSettings } = settings;
+  await sensitiveRequest("/api/admin/settings", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(settings),
-  });
-
-  if (!response.ok) {
-    let message = `HTTP error! status: ${response.status}`;
-
-    try {
-      const errorData = await response.json();
-      if (errorData?.message) {
-        message = String(errorData.message);
-      }
-    } catch {
-      // Keep the fallback HTTP status message.
-    }
-
-    console.error("Failed to update settings:", message);
-    throw new Error(message);
-  }
+    body: JSON.stringify(writableSettings),
+  }, twoFactorCode);
 }
 export async function updateSettingsWithToast(
   settings: Partial<SettingsResponse>,

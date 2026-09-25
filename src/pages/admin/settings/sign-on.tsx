@@ -1,16 +1,18 @@
 import {
   SettingCardLabel,
   SettingCardSelect,
-  SettingCardShortTextInput,
+  SettingCard,
   SettingCardSwitch,
 } from "@/components/admin/SettingCard";
-import { updateSettingsWithToast, useSettings } from "@/lib/api";
-import { Button, Text } from "@radix-ui/themes";
+import { updateSettings, updateSettingsWithToast, useSettings } from "@/lib/api";
+import { Badge, Button, Dialog, Flex, Text, TextField } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import Loading from "@/components/loading";
 import React from "react";
 import { renderProviderInputs } from "@/utils/renderProviders";
 import { toast } from "sonner";
+import SensitiveActionDialog from "@/components/admin/SensitiveActionDialog";
+import { generateAPIKey, sensitiveRequest } from "@/lib/sensitiveAction";
 
 export default function SignOnSettings() {
   const { t } = useTranslation();
@@ -155,54 +157,61 @@ export default function SignOnSettings() {
 }
 
 const ApiCard = () => {
-  const { settings } = useSettings();
+  const { settings, loading, refetch } = useSettings();
   const { t } = useTranslation();
-  const [apiValues, setApiValues] = React.useState<string>(settings?.api_key || "" );
+  const [apiValues, setApiValues] = React.useState("");
+  const [action, setAction] = React.useState<"save" | "clear" | "reveal" | null>(null);
+  const [revealedKey, setRevealedKey] = React.useState<string | null>(null);
+  const configured = Boolean(settings.api_key_configured);
 
-  // 生成32位随机字符串
-  const generateRandomString = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = 'komari-';
-    for (let i = 0; i < 32; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  // 处理生成按钮点击
-  const handleGenerateApiKey = () => {
-    const newApiKey = generateRandomString();
-    setApiValues(newApiKey);
-  };
-
-  // 初始化API值
   React.useEffect(() => {
-    if (settings?.api_key) {
-      setApiValues(settings.api_key);
-    }
-  }, [settings?.api_key]);
+    if (revealedKey === null) return;
+    const timer = window.setTimeout(() => setRevealedKey(null), 60_000);
+    return () => window.clearTimeout(timer);
+  }, [revealedKey]);
 
   return (
-    <SettingCardShortTextInput
-        title={t("settings.api.title")}
-        description={t("settings.api.description")}
-        value={apiValues}
-        onChange={(e) => setApiValues(e.target.value)}
-        OnSave={async (values) => {
-          if (!values) {
-            await updateSettingsWithToast({ api_key: "" }, t);
-            return;
+    <SettingCard title={t("settings.api.title")} description={t("security.api_key_hint")}>
+      <Flex direction="column" gap="3" className="w-full" mt="3">
+        <div><Badge color={configured ? "green" : "gray"}>{t(configured ? "security.key_configured" : "security.key_empty")}</Badge></div>
+        <TextField.Root type="password" autoComplete="new-password"
+          aria-label={t("settings.api.title")} placeholder={t("security.new_api_key")}
+          value={apiValues} onChange={(event) => setApiValues(event.target.value)} />
+        <Flex gap="2" wrap="wrap">
+          <Button variant="soft" disabled={loading} onClick={() => setApiValues(generateAPIKey())}>{t("common.generate")}</Button>
+          <Button disabled={loading || !apiValues} onClick={() => {
+            if (apiValues.length < 12) { toast.error(t("settings.api.key_length_error")); return; }
+            setAction("save");
+          }}>{t("common.save")}</Button>
+          <Button variant="soft" disabled={loading || !configured} onClick={() => setAction("reveal")}>{t("security.reveal_key")}</Button>
+          <Button variant="soft" color="red" disabled={loading || !configured} onClick={() => setAction("clear")}>{t("security.clear_key")}</Button>
+        </Flex>
+      </Flex>
+      {action && <SensitiveActionDialog
+        title={t(action === "reveal" ? "security.reveal_key" : action === "clear" ? "security.clear_key" : "security.save_key")}
+        onClose={() => setAction(null)}
+        onConfirm={async (code) => {
+          if (action === "reveal") {
+            const response = await sensitiveRequest("/api/admin/settings/api-key/reveal", { method: "POST" }, code);
+            const data = await response.json();
+            setRevealedKey(data.data.api_key);
+          } else {
+            await updateSettings({ api_key: action === "clear" ? "" : apiValues }, code);
+            setApiValues("");
+            setRevealedKey(null);
+            await refetch();
+            toast.success(t("settings.settings_saved"));
           }
-          if (values.length < 12) {
-            toast.error(t("settings.api.key_length_error"));
-            return;
-          }
-          await updateSettingsWithToast({ api_key: values }, t);
         }}
-      >
-        <div className="flex flex-row gap-2 justify-start items-center">
-          <Button variant="soft" color="green" onClick={handleGenerateApiKey}>{t('common.generate')}</Button>
-        </div>
-      </SettingCardShortTextInput>
-  )
-}
+      />}
+      <Dialog.Root open={revealedKey !== null} onOpenChange={(open) => { if (!open) setRevealedKey(null); }}>
+        <Dialog.Content maxWidth="560px">
+          <Dialog.Title>{t("security.reveal_key")}</Dialog.Title>
+          <Dialog.Description>{t("security.key_visible_hint")}</Dialog.Description>
+          <TextField.Root mt="4" aria-label={t("settings.api.title")} value={revealedKey ?? ""} readOnly />
+          <Flex justify="end" mt="4"><Dialog.Close><Button>{t("common.close")}</Button></Dialog.Close></Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+    </SettingCard>
+  );
+};

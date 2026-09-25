@@ -8,11 +8,11 @@ import {
   Button,
   Dialog,
   Flex,
-  Skeleton,
   TextField,
 } from "@radix-ui/themes";
 import { Github, Globe, User } from "lucide-react";
 import Loading from "@/components/loading";
+import TwoFactorSetup from "@/components/admin/TwoFactorSetup";
 
 const Account = () => {
   return (
@@ -354,97 +354,10 @@ const InnerLayout = () => {
 const TwoFactorDisabled = () => {
   const { t } = useTranslation();
   const { refresh } = useAccount();
-  const [saving, setSaving] = React.useState(false);
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [qrcode, setQRCode] = React.useState<string | null>(null);
-  const [code, setCode] = React.useState<string>("");
-
-  React.useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      fetch("/api/admin/2fa/generate")
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(t("account.qr_fetch_error"));
-          }
-          return response.blob();
-        })
-        .then((blob) => {
-          const url = URL.createObjectURL(blob);
-          setQRCode(url);
-        })
-        .catch((err) => toast.error(err.message))
-        .finally(() => setIsLoading(false));
-    }
-  }, [isOpen]);
-
-  const handleEnable2fa = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!code) {
-      toast.error(t("account.otp_empty_error"));
-      return;
-    }
-    setSaving(true);
-    fetch(`/api/admin/2fa/enable?code=${encodeURIComponent(code)}`, {
-      method: "POST",
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(
-            data.message || `Failed to enable 2FA (${res.status})`
-          );
-        }
-        return res.json();
-      })
-      .then(() => {
-        toast.success(t("common.updated_successfully"));
-        setIsOpen(false);
-        refresh();
-      })
-      .catch((err) => toast.error(err.message))
-      .finally(() => setSaving(false));
-  };
-
-  return (
-    <Flex direction="column" gap="2">
-      <label className="text-lg font-bold">{t("account.2fa_disabled")}</label>
-      <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-        <Dialog.Trigger>
-          <div>
-            <Button className="w-full">{t("account.enable_2fa")}</Button>
-          </div>
-        </Dialog.Trigger>
-        <Dialog.Content>
-          <Dialog.Title>{t("account.enable_2fa")}</Dialog.Title>
-          <Flex direction="column" gap="2">
-            <label>{t("account.2fa_qr_code_hint")}</label>
-            <div className="flex justify-center">
-              {isLoading ? (
-                <Skeleton width="200px" height="200px" />
-              ) : (
-                <img src={qrcode!} alt="2FA QR Code" width={200} height={200} />
-              )}
-            </div>
-            <label>{t("account.2fa_otp_input_prompt")}</label>
-            <form className="flex flex-col gap-2" onSubmit={handleEnable2fa}>
-              <TextField.Root
-                type="number"
-                name="code"
-                placeholder="000000"
-                value={code}
-                onChange={(e) => setCode((e.target as HTMLInputElement).value)}
-              />
-              <Button disabled={saving} type="submit">
-                {t("account.enable_2fa")}
-              </Button>
-            </form>
-          </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
-    </Flex>
-  );
+  return <Flex direction="column" gap="2">
+    <label>{t("account.2fa_disabled")}</label>
+    <TwoFactorSetup onComplete={refresh} />
+  </Flex>;
 };
 
 const TwoFactorEnabled = () => {
@@ -459,8 +372,9 @@ const TwoFactorEnabled = () => {
       return;
     }
     setSaving(true);
-    fetch(`/api/admin/2fa/disable?2fa_code=${encodeURIComponent(code)}`, {
+    fetch("/api/admin/2fa/disable", {
       method: "POST",
+      headers: { "X-2FA-Code": code },
     })
       .then(async (response) => {
         if (!response.ok) {
@@ -485,8 +399,9 @@ const TwoFactorEnabled = () => {
   return (
     <Flex direction="column" gap="2">
       <label>{t("account.2fa_enabled")}</label>
-      <div>
-        <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
+      <div className="flex gap-2 flex-wrap">
+        <TwoFactorSetup replacing onComplete={refresh} />
+        <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!saving) { setIsOpen(open); setCode(""); } }}>
           <Dialog.Trigger>
             <Button className="ml-2" color="red">
               {t("account.disable_2fa")}
