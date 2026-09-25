@@ -123,8 +123,6 @@ const ThemeManaged: React.FC = () => {
 
   const saveAll = async () => {
     if (!theme) return;
-    console.log("保存前的 values:", values);
-    console.log("保存前的 payload:", payload);
     setSaving(true);
     try {
       const resp = await fetch(

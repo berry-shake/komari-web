@@ -62,7 +62,6 @@ export default function AboutPage() {
       "class-variance-authority",
       "clsx",
       "github-markdown-css",
-      "http-proxy-middleware",
       "i18next",
       "i18next-browser-languagedetector",
       "motion",

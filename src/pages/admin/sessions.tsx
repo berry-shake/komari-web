@@ -148,7 +148,7 @@ export default function Sessions() {
             {sessions.data.map((s) => {
               const isCurrent = s.session === sessions.current;
               return (
-                <TableRow key={s.uuid}>
+                <TableRow key={s.session}>
                   <TableCell>
                     <Dialog.Root>
                       <Dialog.Trigger>

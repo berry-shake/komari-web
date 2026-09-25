@@ -58,3 +58,7 @@ gh -R berry-shake/REPOSITORY workflow run release.yml --ref mod -f tag=1.2.4
 ## 本地验证
 
 使用 go.mod 声明的 Go 工具链、Node.js 24、Python 3.11+、C 编译器。前端 npm ci/test/build；服务端 scripts/build-frontend.sh、Python 脚本测试、go test -short ./... 和 DDNS/API race 测试；Agent 执行 Go/Python 测试、更新逻辑 race 测试及发布矩阵构建。正式 Linux amd64/arm64 镜像需验证 Agent 上报、延迟检测、单库持久化和日志分页后交付。未注入版本的开发构建显示 dev。
+
+## 1.2.7
+
+修复数值输入执行、页脚 HTML 注入、raw iframe 同源权限、临时分享 Cookie 和长期 API 缓存问题。终端改用短期一次性票据，要求 1.2.7 服务端。npm audit 加入构建门禁。详见 [服务端安全说明](https://github.com/berry-shake/komari/blob/mod/docs/SECURITY-1.2.7.md)。

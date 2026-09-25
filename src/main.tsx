@@ -27,18 +27,8 @@ import { Toaster } from "./components/ui/sonner";
 import { RPC2Provider } from "./contexts/RPC2Context";
 const App = () => {
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tempKey = params.get("temp_key");
-
-    if (tempKey) {
-      document.cookie = `temp_key=${tempKey}; path=/; max-age=${60 * 60 * 24 * 365 * 100}`;
-      params.delete("temp_key");
-      window.history.replaceState(
-        {},
-        document.title,
-        `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`,
-      );
-    }
+    // Retire the old API runtime cache. Sensitive responses must remain online-only.
+    if ("caches" in window) void caches.delete("api-cache");
   }, []);
   const [appearance, setAppearance] = useLocalStorage<Appearance>(
     "appearance",

@@ -8,6 +8,7 @@ if [[ "$VERSION" != dev && ! "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0
 fi
 
 npm ci
+npm audit --audit-level=low
 npm test
 npm run build
 python3 - <<'PACKAGE'

@@ -44,13 +44,12 @@ export const RPC2Provider: React.FC<{ children: React.ReactNode }> = ({ children
         setError(err.message);
         setConnectionState(client.state);
       },
-      onReconnecting: (attempt) => {
+      onReconnecting: (_attempt) => {
         setConnectionState(client.state);
-        console.log(`RPC2 重连尝试 ${attempt}`);
       },
       onMessage: (data) => {
         // 可以在这里处理全局消息
-        console.debug("RPC2 消息:", data);
+        void data;
       },
     });
 

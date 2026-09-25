@@ -1,3 +1,4 @@
+import { sanitizeFooterHtml } from "@/utils/footerHtml";
 import { Flex, Text } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { useRPC2Call } from "@/contexts/RPC2Context";
@@ -57,7 +58,7 @@ const Footer = () => {
         >
           <span
             dangerouslySetInnerHTML={{
-              __html: customFooterHtml,
+              __html: sanitizeFooterHtml(customFooterHtml),
             }}
           ></span>
           <Text size="2" color="gray">

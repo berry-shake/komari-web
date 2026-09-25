@@ -77,6 +77,7 @@ const TerminalPage = () => {
   } = useXtermjsSettings();
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstance = useRef<Terminal | null>(null);
+  const [terminalTicket, setTerminalTicket] = useState<{uuid: string; value: string} | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const resolvedSettingsRef = useRef<XtermjsSettings>(defaultXtermjsSettings);
@@ -231,20 +232,29 @@ const TerminalPage = () => {
   }, [t, uuid]);
 
   useEffect(() => {
-    if (!settingsResolved || !twoFaResolved || uuid === null || !terminalRef.current) return;
+    if (!settingsResolved || !twoFaResolved || uuid === null) return;
+    const abort = new AbortController();
+    let code = "";
+    if (twoFaEnabled) {
+      code = window.prompt(t("account.2fa_otp_input_prompt")) || "";
+      if (!code) return;
+    }
+    void fetch(`/api/admin/client/${encodeURIComponent(uuid)}/terminal/ticket`, {
+      method: "POST", headers: code ? { "X-2FA-Code": code } : {}, signal: abort.signal,
+    }).then(async (response) => {
+      const data = await response.json();
+      if (!response.ok || !data.ticket) throw new Error(data.error || "Terminal authorization failed");
+      if (!abort.signal.aborted) setTerminalTicket({uuid, value: data.ticket});
+    }).catch((error) => { if (!abort.signal.aborted) window.alert(error.message); });
+    return () => abort.abort();
+  }, [settingsResolved, twoFaResolved, twoFaEnabled, uuid, t]);
+
+  useEffect(() => {
+    if (!settingsResolved || !twoFaResolved || uuid === null || !terminalRef.current || terminalTicket?.uuid !== uuid) return;
     if (initializedUuidRef.current === uuid) return;
 
     initializedUuidRef.current = uuid;
     firstBinary.current = false;
-    let otpQuery = "";
-    if (twoFaEnabled) {
-      const code = window.prompt(t("account.2fa_otp_input_prompt"));
-      if (!code) {
-        initializedUuidRef.current = null;
-        return;
-      }
-      otpQuery = `?2fa_code=${encodeURIComponent(code)}`;
-    }
 
     const snapshot = resolvedSettingsRef.current;
     const terminalOptions: Partial<ITerminalOptions> = {
@@ -308,7 +318,7 @@ const TerminalPage = () => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
     const baseUrl = `${protocol}//${host}`;
-    const ws = new WebSocket(`${baseUrl}/api/admin/client/${uuid}/terminal${otpQuery}`);
+    const ws = new WebSocket(`${baseUrl}/api/admin/client/${uuid}/terminal?ticket=${encodeURIComponent(terminalTicket.value)}`);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 
@@ -469,7 +479,7 @@ const TerminalPage = () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("contextmenu", handleContextMenu);
     };
-  }, [settingsResolved, twoFaEnabled, twoFaResolved, uuid, resizeTerminal, t]);
+  }, [settingsResolved, twoFaEnabled, twoFaResolved, uuid, resizeTerminal, t, terminalTicket]);
 
   // 移除对 leftWidth 的直接依赖，改用防抖
   useEffect(() => {

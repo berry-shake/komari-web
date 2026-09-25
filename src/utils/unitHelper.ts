@@ -14,7 +14,7 @@
  * stringToBytes('1tb');         // 1099511627776
  */
 export function stringToBytes(str: string): number {
-  if (typeof str !== "string" || str.length === 0) {
+  if (typeof str !== "string" || str.length === 0 || str.length > 256) {
     return 0;
   }
   // 定义单位和它们的字节倍数 (使用 1024 为基数)
@@ -67,24 +67,11 @@ export function stringToBytes(str: string): number {
     numericPart = "1";
   }
 
-  try {
-    // 3. 计算数值部分
-    // 使用 Function 构造函数来安全地评估可能包含乘法或科学记数法的表达式
-    // 注意：这仍然假设输入源是可信的，因为它能执行简单的数学运算
-    const value = new Function(`return ${numericPart}`)();
-
-    if (isNaN(value)) {
-      return 0;
-    }
-
-    // 4. 乘以单位对应的倍数
-    const multiplier = units[unit];
-    return Math.round(value * multiplier);
-  } catch (error) {
-    // 如果表达式无效（例如 "abc-gb"），则捕获错误并返回 0
-    console.error(`Error parsing string "${str}":`, error);
-    return 0;
-  }
+  // Parse only numeric factors. Never execute input as JavaScript.
+  const factors = numericPart.split("*");
+  if (factors.length > 32 || factors.some((factor) => !/^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/.test(factor))) return 0;
+  const value = factors.reduce((product, factor) => product * Number(factor), 1) * units[unit];
+  return Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER ? Math.round(value) : 0;
 }
 
 export function formatBytes(bytes: number): string {
