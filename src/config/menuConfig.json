@@ -39,11 +39,6 @@
           "labelKey": "settings.xtermjs.title",
           "path": "/admin/settings/xtermjs",
           "icon": "Terminal"
-        },
-        {
-          "labelKey": "settings.reverse_proxy.title",
-          "path": "/admin/settings/reverse-proxy",
-          "icon": "Globe"
         }
       ]
     },

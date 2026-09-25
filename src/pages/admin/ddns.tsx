@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { ChevronDownIcon } from "@radix-ui/react-icons";
 import {
   Badge,
   Box,
@@ -302,101 +303,111 @@ export default function DDNSPage() {
         </Callout.Root>
       )}
       <Card>
-        {settings ? (
-          <Flex direction="column" gap="4">
-            <Flex align="center" gap="3" wrap="wrap">
+        <details className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent-9)] [&::-webkit-details-marker]:hidden">
+            <span className="flex flex-wrap items-center gap-3">
               <Text weight="bold">{t("ddns.settings")}</Text>
-              <Badge color={settings.api_token_set ? "green" : "gray"}>
-                {settings.api_token_set
-                  ? t("ddns.token_set")
-                  : t("ddns.token_unset")}
-              </Badge>
-            </Flex>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label={t("ddns.token")}>
-                <TextField.Root
-                  type="password"
-                  aria-label={t("ddns.token")}
-                  autoComplete="new-password"
-                  value={token}
-                  onChange={(e) => {
-                    setToken(e.target.value);
-                    setClearToken(false);
-                  }}
-                  placeholder={
-                    settings.api_token_set
-                      ? t("ddns.keep_token")
-                      : t("ddns.enter_token")
-                  }
-                />
-                <Text size="1" color="gray">
-                  {t("ddns.token_help")}
-                </Text>
-                {settings.api_token_set && (
-                  <Text as="label" size="2">
-                    <Flex gap="2" align="center">
-                      <Checkbox
-                        checked={clearToken}
-                        onCheckedChange={(v) => {
-                          setClearToken(v === true);
-                          if (v) setToken("");
-                        }}
-                      />
-                      {t("ddns.clear_token")}
-                    </Flex>
+              {settings && (
+                <Badge color={settings.api_token_set ? "green" : "gray"}>
+                  {settings.api_token_set
+                    ? t("ddns.token_set")
+                    : t("ddns.token_unset")}
+                </Badge>
+              )}
+            </span>
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="shrink-0 group-open:rotate-180"
+            />
+          </summary>
+          {settings ? (
+            <Flex direction="column" gap="4" mt="4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label={t("ddns.token")}>
+                  <TextField.Root
+                    type="password"
+                    aria-label={t("ddns.token")}
+                    autoComplete="new-password"
+                    value={token}
+                    onChange={(e) => {
+                      setToken(e.target.value);
+                      setClearToken(false);
+                    }}
+                    placeholder={
+                      settings.api_token_set
+                        ? t("ddns.keep_token")
+                        : t("ddns.enter_token")
+                    }
+                  />
+                  <Text size="1" color="gray">
+                    {t("ddns.token_help")}
                   </Text>
-                )}
-              </Field>
-              <Field label={t("ddns.interval")}>
-                <TextField.Root
-                  type="number"
-                  min={1}
-                  max={1440}
-                  aria-label={t("ddns.interval")}
-                  value={settings.interval}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      interval: Number(e.target.value),
-                    })
-                  }
-                />
-                <Text size="1" color="gray">
-                  {t("ddns.online_only")}
+                  {settings.api_token_set && (
+                    <Text as="label" size="2">
+                      <Flex gap="2" align="center">
+                        <Checkbox
+                          checked={clearToken}
+                          onCheckedChange={(v) => {
+                            setClearToken(v === true);
+                            if (v) setToken("");
+                          }}
+                        />
+                        {t("ddns.clear_token")}
+                      </Flex>
+                    </Text>
+                  )}
+                </Field>
+                <Field label={t("ddns.interval")}>
+                  <TextField.Root
+                    type="number"
+                    min={1}
+                    max={1440}
+                    aria-label={t("ddns.interval")}
+                    value={settings.interval}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        interval: Number(e.target.value),
+                      })
+                    }
+                  />
+                  <Text size="1" color="gray">
+                    {t("ddns.online_only")}
+                  </Text>
+                </Field>
+              </div>
+              <Flex align="center" gap="4" wrap="wrap">
+                <Text as="label" size="2">
+                  <Flex gap="2" align="center">
+                    <Switch
+                      checked={settings.enabled}
+                      onCheckedChange={(enabled) =>
+                        setSettings({ ...settings, enabled })
+                      }
+                    />
+                    {t("ddns.schedule")}
+                  </Flex>
                 </Text>
-              </Field>
-            </div>
-            <Flex align="center" gap="4" wrap="wrap">
-              <Text as="label" size="2">
-                <Flex gap="2" align="center">
-                  <Switch
-                    checked={settings.enabled}
-                    onCheckedChange={(enabled) =>
-                      setSettings({ ...settings, enabled })
-                    }
-                  />
-                  {t("ddns.schedule")}
-                </Flex>
-              </Text>
-              <Text as="label" size="2">
-                <Flex gap="2" align="center">
-                  <Switch
-                    checked={settings.notify}
-                    onCheckedChange={(notify) =>
-                      setSettings({ ...settings, notify })
-                    }
-                  />
-                  {t("ddns.notify")}
-                </Flex>
-              </Text>
-              <Button variant="soft" disabled={busy} onClick={saveSettings}>
-                {t("ddns.save_settings")}
-              </Button>
+                <Text as="label" size="2">
+                  <Flex gap="2" align="center">
+                    <Switch
+                      checked={settings.notify}
+                      onCheckedChange={(notify) =>
+                        setSettings({ ...settings, notify })
+                      }
+                    />
+                    {t("ddns.notify")}
+                  </Flex>
+                </Text>
+                <Button variant="soft" disabled={busy} onClick={saveSettings}>
+                  {t("ddns.save_settings")}
+                </Button>
+              </Flex>
             </Flex>
-          </Flex>
-        ) : (
-          <Text>{t("ddns.loading")}</Text>
-        )}
+          ) : (
+            <Text>{t("ddns.loading")}</Text>
+          )}
+        </details>
       </Card>
       <Tabs.Root defaultValue="records">
         <Flex align="center" justify="between" gap="3">
