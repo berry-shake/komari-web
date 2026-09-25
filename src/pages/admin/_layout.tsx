@@ -11,6 +11,19 @@ const AuthenticatedAdmin = lazy(
   () => import("@/components/admin/AuthenticatedAdmin"),
 );
 
+const AdminLoading = () => {
+  const { t } = useTranslation();
+  return (
+    <main
+      className="min-h-screen flex items-center justify-center bg-accent-1"
+      role="status"
+      aria-label={t("loading")}
+    >
+      <Spinner size="3" />
+    </main>
+  );
+};
+
 const AdminAccess = () => {
   const { account, loading, error, refresh } = useAccount();
   const {
@@ -36,16 +49,7 @@ const AdminAccess = () => {
 
   if (account?.logged_in && !error) {
     return (
-      <Suspense
-        fallback={
-          <div
-            className="min-h-screen flex items-center justify-center"
-            role="status"
-          >
-            <Spinner size="3" />
-          </div>
-        }
-      >
+      <Suspense fallback={<AdminLoading />}>
         <AuthenticatedAdmin />
       </Suspense>
     );
@@ -53,6 +57,8 @@ const AdminAccess = () => {
 
   const failed = !!error || !!publicError;
   const checking = !failed && ((loading && !account) || !publicInfo);
+  if (checking) return <AdminLoading />;
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-accent-1 p-6">
       <Card size="4" className="w-full max-w-[420px]">
@@ -81,11 +87,6 @@ const AdminAccess = () => {
               >
                 {t("common.retry")}
               </Button>
-            </Flex>
-          ) : checking ? (
-            <Flex role="status" gap="2" align="center">
-              <Spinner />
-              <Text size="2">{t("loading")}</Text>
             </Flex>
           ) : (
             <LoginForm />
