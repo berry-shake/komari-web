@@ -59,6 +59,13 @@ type LogEntry = {
   detail: string;
   ip: string;
 };
+type LogPage = {
+  logs: LogEntry[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+};
 type Draft = Pick<
   RecordEntry,
   | "record_name"
@@ -87,12 +94,14 @@ async function request<T>(
   path: string,
   method = "GET",
   body?: unknown,
+  signal?: AbortSignal,
 ): Promise<T> {
   const response = await fetch(`/api/admin/ddns/${path}`, {
     method,
     headers:
       body === undefined ? undefined : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
+    signal,
   });
   const result = await response.json();
   if (!response.ok || result.status !== "success")
@@ -116,8 +125,20 @@ export default function DDNSPage() {
   const [clearToken, setClearToken] = useState(false);
   const [records, setRecords] = useState<RecordEntry[]>([]);
   const [nodes, setNodes] = useState<Node[]>([]);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [filter, setFilter] = useState("");
+  const [logQuery, setLogQuery] = useState({
+    record: "",
+    page: 1,
+    pageSize: 20,
+  });
+  const [logPage, setLogPage] = useState<LogPage>({
+    logs: [],
+    total: 0,
+    page: 1,
+    page_size: 20,
+    total_pages: 1,
+  });
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [logsError, setLogsError] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -130,17 +151,41 @@ export default function DDNSPage() {
   const time = (value: string | null) =>
     value ? new Date(value).toLocaleString() : "—";
   const refresh = useCallback(async () => {
-    const [r, n, l] = await Promise.all([
+    const [r, n] = await Promise.all([
       request<RecordEntry[]>("records"),
       request<Node[]>("nodes"),
-      request<{ logs: LogEntry[] }>(
-        `logs?limit=500${filter ? `&record=${encodeURIComponent(filter)}` : ""}`,
-      ),
     ]);
     setRecords(r);
     setNodes(n);
-    setLogs(l.logs);
-  }, [filter]);
+    // Refresh and mutations show the latest entries, including after clearing.
+    setLogQuery((current) => ({ ...current, page: 1 }));
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+    setLogsLoading(true);
+    setLogsError("");
+    const params = new URLSearchParams({
+      page: String(logQuery.page),
+      page_size: String(logQuery.pageSize),
+    });
+    if (logQuery.record) params.set("record", logQuery.record);
+    request<LogPage>(`logs?${params}`, "GET", undefined, controller.signal)
+      .then((result) => {
+        if (!cancelled) setLogPage(result);
+      })
+      .catch((e) => {
+        if (!cancelled)
+          setLogsError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (!cancelled) setLogsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [logQuery]);
   useEffect(() => {
     let cancelled = false;
     request<Settings>("settings")
@@ -490,8 +535,15 @@ export default function DDNSPage() {
         <Tabs.Content value="logs">
           <Flex gap="3" align="center" wrap="wrap" my="3">
             <Select.Root
-              value={filter || "__all__"}
-              onValueChange={(v) => setFilter(v === "__all__" ? "" : v)}
+              value={logQuery.record || "__all__"}
+              disabled={busy}
+              onValueChange={(v) =>
+                setLogQuery((current) => ({
+                  ...current,
+                  record: v === "__all__" ? "" : v,
+                  page: 1,
+                }))
+              }
             >
               <Select.Trigger aria-label={t("ddns.filter")} />
               <Select.Content>
@@ -512,14 +564,21 @@ export default function DDNSPage() {
               size="1"
               color="red"
               variant="soft"
-              disabled={busy || logs.length === 0}
+              disabled={
+                busy || logsLoading || !!logsError || logPage.total === 0
+              }
               onClick={() => setClearLogsOpen(true)}
             >
               {t("ddns.clear_logs")}
             </Button>
           </Flex>
+          {logsError && (
+            <Callout.Root color="red" role="alert" mb="3">
+              <Callout.Text>{logsError}</Callout.Text>
+            </Callout.Root>
+          )}
           <Box overflowX="auto">
-            <Table.Root variant="surface">
+            <Table.Root variant="surface" aria-busy={logsLoading}>
               <Table.Header>
                 <Table.Row>
                   {["time", "name", "action", "detail"].map((key) => (
@@ -530,12 +589,18 @@ export default function DDNSPage() {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {logs.length === 0 ? (
+                {logsLoading || logsError || logPage.logs.length === 0 ? (
                   <Table.Row>
-                    <Table.Cell colSpan={4}>{t("ddns.no_logs")}</Table.Cell>
+                    <Table.Cell colSpan={4}>
+                      {logsLoading
+                        ? t("ddns.loading")
+                        : logsError
+                          ? t("ddns.logs_load_failed")
+                          : t("ddns.no_logs")}
+                    </Table.Cell>
                   </Table.Row>
                 ) : (
-                  logs.map((log) => (
+                  logPage.logs.map((log) => (
                     <Table.Row key={log.id}>
                       <Table.Cell>
                         <Text size="1">{time(log.time)}</Text>
@@ -567,6 +632,106 @@ export default function DDNSPage() {
               </Table.Body>
             </Table.Root>
           </Box>
+          <Flex justify="between" align="center" gap="3" wrap="wrap" mt="3">
+            <Flex align="center" gap="3" wrap="wrap">
+              <Select.Root
+                value={String(logQuery.pageSize)}
+                disabled={busy}
+                onValueChange={(value) =>
+                  setLogQuery((current) => ({
+                    ...current,
+                    pageSize: Number(value),
+                    page: 1,
+                  }))
+                }
+              >
+                <Select.Trigger aria-label={t("ddns.page_size")} />
+                <Select.Content>
+                  {[20, 50, 100].map((count) => (
+                    <Select.Item key={count} value={String(count)}>
+                      {t("ddns.rows_per_page", { count })}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+              <Text size="2" color="gray" role="status" aria-live="polite">
+                {logsLoading
+                  ? t("ddns.loading")
+                  : logsError
+                    ? "—"
+                    : t("ddns.page_info", {
+                        total: logPage.total,
+                        page: logPage.page,
+                        pages: logPage.total_pages,
+                      })}
+              </Text>
+            </Flex>
+            <Flex gap="2">
+              <Button
+                size="1"
+                variant="soft"
+                disabled={
+                  busy || logsLoading || !!logsError || logPage.page <= 1
+                }
+                onClick={() =>
+                  setLogQuery((current) => ({ ...current, page: 1 }))
+                }
+              >
+                {t("ddns.first_page")}
+              </Button>
+              <Button
+                size="1"
+                variant="soft"
+                disabled={
+                  busy || logsLoading || !!logsError || logPage.page <= 1
+                }
+                onClick={() =>
+                  setLogQuery((current) => ({
+                    ...current,
+                    page: logPage.page - 1,
+                  }))
+                }
+              >
+                {t("ddns.previous_page")}
+              </Button>
+              <Button
+                size="1"
+                variant="soft"
+                disabled={
+                  busy ||
+                  logsLoading ||
+                  !!logsError ||
+                  logPage.page >= logPage.total_pages
+                }
+                onClick={() =>
+                  setLogQuery((current) => ({
+                    ...current,
+                    page: logPage.page + 1,
+                  }))
+                }
+              >
+                {t("ddns.next_page")}
+              </Button>
+              <Button
+                size="1"
+                variant="soft"
+                disabled={
+                  busy ||
+                  logsLoading ||
+                  !!logsError ||
+                  logPage.page >= logPage.total_pages
+                }
+                onClick={() =>
+                  setLogQuery((current) => ({
+                    ...current,
+                    page: logPage.total_pages,
+                  }))
+                }
+              >
+                {t("ddns.last_page")}
+              </Button>
+            </Flex>
+          </Flex>
         </Tabs.Content>
       </Tabs.Root>
       <Dialog.Root

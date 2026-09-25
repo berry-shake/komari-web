@@ -1,5 +1,5 @@
 import { SERVER_RELEASES_URL } from "@/config/distribution";
-import { compareVersions, isNewerVersion, isMaintenanceVersion } from "@/utils/version";
+import { compareVersions, isNewerVersion, isDistributionVersion } from "@/utils/version";
 import { Cross1Icon, ExitIcon } from "@radix-ui/react-icons";
 import {
   Button,
@@ -194,7 +194,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
         const data: GithubReleaseInfo[] = await resp.json();
         if (ignore) return;
         const valid = (data || [])
-          .filter((r) => !r.draft && !r.prerelease && isMaintenanceVersion(r.tag_name))
+          .filter((r) => !r.draft && !r.prerelease && isDistributionVersion(r.tag_name))
           .filter((r) =>
             isNewerVersion(r.tag_name, currentVersion),
           )

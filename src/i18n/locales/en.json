@@ -930,6 +930,14 @@
     "remove_help": "Remove {{name}} from DDNS? The DNS record in Cloudflare will be retained.",
     "clear_logs_help": "Clear all DDNS logs? Your records and settings will be retained.",
     "action_add": "Added",
-    "action_edit": "Edited"
+    "action_edit": "Edited",
+    "page_size": "Rows per page",
+    "rows_per_page": "{{count}} per page",
+    "page_info": "{{total}} entries · Page {{page}} of {{pages}}",
+    "first_page": "First",
+    "previous_page": "Previous",
+    "next_page": "Next",
+    "last_page": "Last",
+    "logs_load_failed": "Could not load logs. Please refresh to retry."
   }
 }

@@ -930,6 +930,14 @@
     "remove_help": "从 DDNS 中移除 {{name}}？Cloudflare 上的 DNS 记录会保留。",
     "clear_logs_help": "清空全部 DDNS 日志？解析记录和设置会保留。",
     "action_add": "添加",
-    "action_edit": "编辑"
+    "action_edit": "编辑",
+    "page_size": "每页条数",
+    "rows_per_page": "每页 {{count}} 条",
+    "page_info": "共 {{total}} 条，第 {{page}} / {{pages}} 页",
+    "first_page": "首页",
+    "previous_page": "上一页",
+    "next_page": "下一页",
+    "last_page": "末页",
+    "logs_load_failed": "日志加载失败，请刷新重试。"
   }
 }
