@@ -351,6 +351,11 @@
     "title": "日誌"
   },
   "login": {
+    "admin_title": "登入管理後台",
+    "admin_description": "登入後存取管理功能。",
+    "session_error": "暫時無法確認登入狀態，請重試。",
+    "back_home": "返回首頁",
+    "no_methods": "目前沒有可用的登入方式。",
     "desc": "登入到 Komari 控制面板。",
     "login_with": "使用 {{provider}} 登入",
     "login_with_github": "使用 GitHub 登入",

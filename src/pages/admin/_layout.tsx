@@ -1,68 +1,110 @@
-import { Outlet } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
+import { useTranslation } from "react-i18next";
+import { AccountProvider, useAccount } from "@/contexts/AccountContext";
+import { usePublicInfo } from "@/contexts/PublicInfoContext";
+import { LoginForm } from "@/components/Login";
 
-import AdminPanelBar from "../../components/admin/AdminPanelBar";
-import { AccountProvider } from "@/contexts/AccountContext";
-import { updateSettingsWithToast, useSettings } from "@/lib/api";
-import { Button, Dialog } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
-import { Eula } from "@/utils/field";
-import { normalizeLanguage, readStoredLanguage } from "@/utils/language";
-const AdminLayout = () => {
-  const { settings, loading } = useSettings();
-  const lang = readStoredLanguage() || "en";
-  const [open, setOpen] = useState(false);
+// Do not mount the shell, its settings requests, or nested routes before authentication.
+const AuthenticatedAdmin = lazy(
+  () => import("@/components/admin/AuthenticatedAdmin"),
+);
+
+const AdminAccess = () => {
+  const { account, loading, error, refresh } = useAccount();
+  const {
+    publicInfo,
+    error: publicError,
+    refresh: refreshPublicInfo,
+  } = usePublicInfo();
+  const { t } = useTranslation();
+
   useEffect(() => {
-    if (loading) {
-      setOpen(false);
-    }
-    else if (
-      settings &&
-      !settings.eula_accepted &&
-      normalizeLanguage(lang).startsWith("zh")
-    ) {
-      setOpen(true);
-    }
-  }, [loading, settings, lang]);
+    const recheck = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    window.addEventListener("focus", recheck);
+    document.addEventListener("visibilitychange", recheck);
+    const timer = window.setInterval(recheck, 60_000);
+    return () => {
+      window.removeEventListener("focus", recheck);
+      document.removeEventListener("visibilitychange", recheck);
+      window.clearInterval(timer);
+    };
+  }, [refresh]);
+
+  if (account?.logged_in && !error) {
+    return (
+      <Suspense
+        fallback={
+          <div
+            className="min-h-screen flex items-center justify-center"
+            role="status"
+          >
+            <Spinner size="3" />
+          </div>
+        }
+      >
+        <AuthenticatedAdmin />
+      </Suspense>
+    );
+  }
+
+  const failed = !!error || !!publicError;
+  const checking = !failed && ((loading && !account) || !publicInfo);
   return (
-    <>
-      <Dialog.Root open={open}>
-        <Dialog.Content>
-          <Dialog.Content>
-            <Dialog.Title>法律声明与合规指引</Dialog.Title>
-            <div className="flex flex-col gap-2">
-              <div className="max-h-[70vh] overflow-y-auto space-y-4">
-                <pre className="text-wrap">{Eula}</pre>
-              </div>
-              <div className="flex flex-row gap-2 justify-end items-center">
-                <Button
-                  variant="soft"
-                  color="red"
-                  onClick={() => window.close()}
-                >
-                  不接受
-                </Button>
-                <Button
-                  variant="solid"
-                  onClick={() => {
-                    setOpen(false);
-                    updateSettingsWithToast(
-                      { eula_accepted: true },
-                      (key) => key
-                    );
-                  }}
-                >
-                  我已详细阅读并接受
-                </Button>
-              </div>
-            </div>
-          </Dialog.Content>
-        </Dialog.Content>
-      </Dialog.Root>
-      <AccountProvider>
-        <AdminPanelBar content={<Outlet />} />
-      </AccountProvider>
-    </>
+    <main className="min-h-screen flex items-center justify-center bg-accent-1 p-6">
+      <Card size="4" className="w-full max-w-[420px]">
+        <Flex direction="column" gap="5">
+          <Flex direction="column" gap="2">
+            <Text size="2" color="gray" weight="medium">
+              Komari
+            </Text>
+            <Heading as="h1" size="6">
+              {t("login.admin_title")}
+            </Heading>
+            <Text size="2" color="gray">
+              {t("login.admin_description")}
+            </Text>
+          </Flex>
+          {failed ? (
+            <Flex direction="column" gap="3">
+              <Text role="alert" size="2" color="red">
+                {t("login.session_error")}
+              </Text>
+              <Button
+                onClick={() => {
+                  void refresh();
+                  refreshPublicInfo();
+                }}
+              >
+                {t("common.retry")}
+              </Button>
+            </Flex>
+          ) : checking ? (
+            <Flex role="status" gap="2" align="center">
+              <Spinner />
+              <Text size="2">{t("loading")}</Text>
+            </Flex>
+          ) : (
+            <LoginForm />
+          )}
+          <Link
+            className="text-sm text-[var(--gray-11)] hover:underline self-center"
+            to="/"
+          >
+            {t("login.back_home")}
+          </Link>
+        </Flex>
+      </Card>
+    </main>
   );
 };
 
+const AdminLayout = () => (
+  <AccountProvider>
+    <AdminAccess />
+  </AccountProvider>
+);
 export default AdminLayout;

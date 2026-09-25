@@ -351,6 +351,11 @@
     "title": "Log"
   },
   "login": {
+    "admin_title": "Sign in to the dashboard",
+    "admin_description": "Sign in to access administration.",
+    "session_error": "Unable to verify your session. Please try again.",
+    "back_home": "Back to home",
+    "no_methods": "No sign-in method is currently available.",
     "desc": "Log in to the Komari control panel.",
     "login_with": "Login with {{provider}}",
     "login_with_github": "Login with GitHub",

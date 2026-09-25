@@ -351,6 +351,11 @@
     "title": "日志"
   },
   "login": {
+    "admin_title": "登录管理后台",
+    "admin_description": "登录后访问管理功能。",
+    "session_error": "暂时无法确认登录状态，请重试。",
+    "back_home": "返回首页",
+    "no_methods": "当前没有可用的登录方式。",
     "desc": "登录到 Komari 控制面板。",
     "login_with": "使用 {{provider}} 登录",
     "login_with_github": "使用 GitHub 登录",
