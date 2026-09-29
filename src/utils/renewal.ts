@@ -8,8 +8,8 @@ export function isRenewalDue(expiredAt: string, now = Date.now()): boolean {
 // EditClient stores the provided timestamp directly. LocalTime reads its clock
 // fields in the application's timezone, so submit that timezone's wall time
 // rather than a UTC ISO string. The API supplies the offset in expired_at.
-export function formatRenewalExpiry(date: Date, previousExpiry: string): string | null {
-  const zone = previousExpiry.match(/(Z|([+-])(\d{2}):(\d{2}))$/);
+export function formatRenewalExpiry(date: Date, previousExpiry: string | null | undefined): string | null {
+  const zone = previousExpiry?.match(/(Z|([+-])(\d{2}):(\d{2}))$/);
   if (!zone || !Number.isFinite(date.getTime())) return null;
   const minutes = zone[1] === "Z" ? 0
     : (Number(zone[3]) * 60 + Number(zone[4])) * (zone[2] === "+" ? 1 : -1);

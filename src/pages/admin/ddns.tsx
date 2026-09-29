@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { DDNSNodePicker, type DDNSNode as Node } from "@/components/admin/DDNSNodePicker";
 import {
   Badge,
   Box,
@@ -25,13 +26,6 @@ type Settings = {
   notify: boolean;
   api_token_set: boolean;
   running: boolean;
-};
-type Node = {
-  uuid: string;
-  name: string;
-  online: boolean;
-  ipv4: string;
-  ipv6: string;
 };
 type RecordEntry = {
   id: string;
@@ -91,6 +85,10 @@ const emptyDraft = (): Draft => ({
 const ttlOptions = [
   1, 60, 120, 300, 600, 900, 1800, 3600, 7200, 18000, 43200, 86400,
 ];
+const logActions = [
+  "create", "update", "skip", "error", "sync",
+  "add", "edit", "delete", "notify",
+];
 async function request<T>(
   path: string,
   method = "GET",
@@ -128,6 +126,7 @@ export default function DDNSPage() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [logQuery, setLogQuery] = useState({
     record: "",
+    action: "",
     page: 1,
     pageSize: 20,
   });
@@ -171,6 +170,7 @@ export default function DDNSPage() {
       page_size: String(logQuery.pageSize),
     });
     if (logQuery.record) params.set("record", logQuery.record);
+    if (logQuery.action) params.set("action", logQuery.action);
     request<LogPage>(`logs?${params}`, "GET", undefined, controller.signal)
       .then((result) => {
         if (!cancelled) setLogPage(result);
@@ -516,7 +516,7 @@ export default function DDNSPage() {
                         <Text size="1">{time(record.last_checked_at)}</Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <Flex gap="2">
+                        <Flex gap="2" align="center">
                           <Button
                             size="1"
                             variant="soft"
@@ -527,7 +527,7 @@ export default function DDNSPage() {
                           </Button>
                           <Button
                             size="1"
-                            variant="ghost"
+                            variant="soft"
                             color="red"
                             disabled={busy}
                             onClick={() => setRemoving(record)}
@@ -564,6 +564,29 @@ export default function DDNSPage() {
                 {[...new Set(records.map((r) => r.record_name))].map((name) => (
                   <Select.Item key={name} value={name}>
                     {name}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+            <Select.Root
+              value={logQuery.action || "__all__"}
+              disabled={busy}
+              onValueChange={(value) =>
+                setLogQuery((current) => ({
+                  ...current,
+                  action: value === "__all__" ? "" : value,
+                  page: 1,
+                }))
+              }
+            >
+              <Select.Trigger aria-label={t("ddns.filter_action")} />
+              <Select.Content>
+                <Select.Item value="__all__">
+                  {t("ddns.all_actions")}
+                </Select.Item>
+                {logActions.map((action) => (
+                  <Select.Item key={action} value={action}>
+                    {t(`ddns.action_${action}`)}
                   </Select.Item>
                 ))}
               </Select.Content>
@@ -791,41 +814,13 @@ export default function DDNSPage() {
               </Field>
             </div>
             <Field label={t("ddns.source")}>
-              <Box
-                style={{
-                  maxHeight: 180,
-                  overflowY: "auto",
-                  border: "1px solid var(--gray-6)",
-                  borderRadius: 6,
-                  padding: 12,
-                }}
-              >
-                <Flex direction="column" gap="2">
-                  {nodes.map((node) => (
-                    <Text as="label" size="2" key={node.uuid}>
-                      <Flex gap="2" align="center">
-                        <Checkbox
-                          checked={draft.source_node.includes(node.uuid)}
-                          onCheckedChange={(checked) =>
-                            setDraft({
-                              ...draft,
-                              source_node: checked
-                                ? [...draft.source_node, node.uuid]
-                                : draft.source_node.filter(
-                                    (id) => id !== node.uuid,
-                                  ),
-                            })
-                          }
-                        />
-                        {node.name}
-                        <Badge color={node.online ? "green" : "gray"}>
-                          {node.online ? t("ddns.online") : t("ddns.offline")}
-                        </Badge>
-                      </Flex>
-                    </Text>
-                  ))}
-                </Flex>
-              </Box>
+              <DDNSNodePicker
+                key={editor?.record?.id || "new"}
+                nodes={nodes}
+                value={draft.source_node}
+                disabled={busy}
+                onChange={source_node => setDraft(current => ({ ...current, source_node }))}
+              />
               <Text size="1" color="gray">
                 {t("ddns.source_help")}
               </Text>

@@ -8,6 +8,8 @@ test("renewal writes server wall time instead of shifting expiry through UTC", (
   assert.equal(formatRenewalExpiry(new Date("2026-11-23T03:30:00Z"), "2026-10-22T22:30:00-05:00"), "2026-11-22 22:30:00");
   assert.equal(formatRenewalExpiry(new Date("2026-11-23T10:00:00Z"), "2026-10-23T10:00:00Z"), "2026-11-23 10:00:00");
   assert.equal(formatRenewalExpiry(new Date(), "invalid"), null);
+  assert.equal(formatRenewalExpiry(new Date(), null), null);
+  assert.equal(formatRenewalExpiry(new Date(), undefined), null);
 });
 
 test("renewal is offered only from now through the next seven days, inclusive", () => {
