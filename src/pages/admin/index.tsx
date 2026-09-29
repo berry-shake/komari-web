@@ -79,6 +79,8 @@ import {
 } from "@/components/admin/SettingCard";
 import { useSettings } from "@/lib/api";
 import { SelectOrInput } from "@/components/ui/select-or-input";
+import { RenewalButton } from "@/components/admin/NodeTable/RenewalButton";
+import { billingExpiryFromDate, toDateInputValue } from "@/utils/dateInput";
 
 
 const NodeDetailsPage = () => {
@@ -502,6 +504,9 @@ const ActionButtons = ({ node, settings }: { node: NodeDetail, settings: any }) 
       </IconButton>
       <EditButton node={node} />
       <BillingButton node={node} />
+      <div className="flex w-[18px] shrink-0 items-center justify-center">
+        <RenewalButton node={node} />
+      </div>
       <DeleteButton node={node} />
     </div>
   );
@@ -1772,7 +1777,7 @@ function BillingButton({ node }: { node: NodeDetail }) {
         body: JSON.stringify({
           price,
           billing_cycle: billingCycleValue,
-          expired_at: expiredAtValue,
+          expired_at: billingExpiryFromDate(expiredAtValue),
           currency: currencyValue,
           auto_renewal: autoRenewal,
         }),
@@ -1850,11 +1855,7 @@ function BillingButton({ node }: { node: NodeDetail }) {
             </Flex>
             <TextField.Root
               name="expiredAt"
-              defaultValue={
-                node.expired_at
-                  ? new Date(node.expired_at).toISOString().slice(0, 10)
-                  : "0001-01-01"
-              }
+              defaultValue={toDateInputValue(node.expired_at) || "0001-01-01"}
               type="date"
             >
               <TextField.Slot side="right">
@@ -1868,7 +1869,7 @@ function BillingButton({ node }: { node: NodeDetail }) {
                     if (dateInput) {
                       const futureDate = new Date();
                       futureDate.setFullYear(futureDate.getFullYear() + 200);
-                      dateInput.value = futureDate.toISOString().slice(0, 10);
+                      dateInput.value = toDateInputValue(futureDate);
                     }
                   }}
                 >
