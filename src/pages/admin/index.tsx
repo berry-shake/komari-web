@@ -504,9 +504,7 @@ const ActionButtons = ({ node, settings }: { node: NodeDetail, settings: any }) 
       </IconButton>
       <EditButton node={node} />
       <BillingButton node={node} />
-      <div className="flex w-[18px] shrink-0 items-center justify-center">
-        <RenewalButton node={node} />
-      </div>
+      <RenewalButton node={node} />
       <DeleteButton node={node} />
     </div>
   );
