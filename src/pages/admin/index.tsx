@@ -504,8 +504,8 @@ const ActionButtons = ({ node, settings }: { node: NodeDetail, settings: any }) 
       </IconButton>
       <EditButton node={node} />
       <BillingButton node={node} />
-      <RenewalButton node={node} />
       <DeleteButton node={node} />
+      <RenewalButton node={node} />
     </div>
   );
 };
