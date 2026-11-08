@@ -16,12 +16,17 @@ import { DownloadIcon } from "lucide-react";
 import { useState } from "react";
 import UploadDialog from "@/components/UploadDialog";
 import SensitiveActionDialog from "@/components/admin/SensitiveActionDialog";
-import { downloadBackup, SensitiveActionError } from "@/lib/sensitiveAction";
+import {
+  downloadBackup,
+  SensitiveActionError,
+  sensitiveRequest,
+} from "@/lib/sensitiveAction";
 
 export default function SiteSettings() {
   const { t } = useTranslation();
   const { settings, loading, error, refetch } = useSettings();
   const [shareHours, setShareHours] = useState(1);
+  const [shareGenerateOpen, setShareGenerateOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<File | null>(null);
 
@@ -256,23 +261,7 @@ export default function SiteSettings() {
           ></SettingCardShortTextInput>
           <div className="flex flex-row w-full gap-2">
             <Button
-              onClick={async () => {
-                const chars =
-                  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                let key = "";
-                for (let i = 0; i < 8; i++) {
-                  key += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
-                await updateSettingsWithToast(
-                  {
-                    tempory_share_token: key,
-                    tempory_share_token_expire_at:
-                      Math.floor(Date.now() / 1000) + shareHours * 3600,
-                  },
-                  t,
-                );
-                await refetch();
-              }}
+              onClick={() => setShareGenerateOpen(true)}
             >
               {t("common.generate")}
             </Button>
@@ -292,6 +281,23 @@ export default function SiteSettings() {
           </div>
         </div>
       </SettingCardCollapse>
+      {shareGenerateOpen && <SensitiveActionDialog
+        title={t("common.generate")}
+        onClose={() => setShareGenerateOpen(false)}
+        onConfirm={async (code) => {
+          await sensitiveRequest(
+            "/api/admin/settings/tempory-share",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ hours: shareHours }),
+            },
+            code,
+          );
+          await refetch();
+          toast.success(t("settings.settings_saved"));
+        }}
+      />}
       <SettingCardLabel>{t("settings.site.custom")}</SettingCardLabel>
       <label className="text-sm text-muted-foreground -mt-4">
         {t("settings.custom.note")}
