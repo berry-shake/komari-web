@@ -122,7 +122,7 @@
       "customColumns": "自定义列",
       "deleting": "删除中...",
       "disableAutoUpdate": "禁用自动更新",
-      "disableWebSsh": "禁用远程控制",
+      "enableWebSsh": "启用远程控制",
       "dragToReorder": "长按拖拽重新排序",
       "editNodePrice": "编辑账单",
       "enableGpuMonitoring": "启用详细 GPU 监控",

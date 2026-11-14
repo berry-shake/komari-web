@@ -122,7 +122,7 @@
       "customColumns": "カスタム列",
       "deleting": "削除中...",
       "disableAutoUpdate": "自動更新を無効にする",
-      "disableWebSsh": "リモートコントロールを無効にする",
+      "enableWebSsh": "リモートコントロールを有効にする",
       "dragToReorder": "長押ししてドラッグで再配置",
       "editNodePrice": "請求書を編集",
       "enableGpuMonitoring": "詳細な GPU 監視を有効にする",

@@ -27,7 +27,7 @@ async function removeClient(uuid: string) {
 }
 
 type InstallOptions = {
-  disableWebSsh: boolean;
+  enableWebSsh: boolean;
   disableAutoUpdate: boolean;
   ignoreUnsafeCert: boolean;
   ghproxy: string;
@@ -43,7 +43,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
   const [selectedPlatform, setSelectedPlatform] =
     React.useState<Platform>("linux");
   const [installOptions, setInstallOptions] = React.useState<InstallOptions>({
-    disableWebSsh: false,
+    enableWebSsh: false,
     disableAutoUpdate: false,
     ignoreUnsafeCert: false,
     ghproxy: "",
@@ -56,8 +56,8 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     const token = row.original.token ?? "";
     const args: string[] = ["-e", host, "-t", token];
     // 根据安装选项生成参数
-    if (installOptions.disableWebSsh) {
-      args.push("--disable-web-ssh");
+    if (installOptions.enableWebSsh) {
+      args.push("--enable-web-ssh");
     }
     if (installOptions.disableAutoUpdate) {
       args.push("--disable-auto-update");
@@ -151,11 +151,11 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
               <div className="grid grid-cols-2 gap-2">
                 <Flex gap="2">
                   <Checkbox
-                    checked={installOptions.disableWebSsh}
+                    checked={installOptions.enableWebSsh}
                     onCheckedChange={(checked) => {
                       setInstallOptions((prev) => ({
                         ...prev,
-                        disableWebSsh: Boolean(checked),
+                        enableWebSsh: Boolean(checked),
                       }));
                     }}
                   />
@@ -164,11 +164,11 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
                     onClick={() => {
                       setInstallOptions((prev) => ({
                         ...prev,
-                        disableWebSsh: !prev.disableWebSsh,
+                        enableWebSsh: !prev.enableWebSsh,
                       }));
                     }}
                   >
-                    {t("admin.nodeTable.disableWebSsh", "禁用 WebSSH")}
+                    {t("admin.nodeTable.enableWebSsh", "启用远程控制")}
                   </label>
                 </Flex>
                 <Flex gap="2">

@@ -122,7 +122,7 @@
       "customColumns": "Kolom Kustom",
       "deleting": "Menghapus...",
       "disableAutoUpdate": "Nonaktifkan Pembaruan Otomatis",
-      "disableWebSsh": "Nonaktifkan Kontrol Jarak Jauh",
+      "enableWebSsh": "Aktifkan Kontrol Jarak Jauh",
       "dragToReorder": "Tekan lama dan seret untuk mengurutkan ulang",
       "editNodePrice": "Ubah Harga",
       "enableGpuMonitoring": "Aktifkan pemantauan GPU terperinci",
